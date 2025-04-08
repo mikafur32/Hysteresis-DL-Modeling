@@ -38,6 +38,6 @@ class BaseModel:
                               save_freq='epoch')
             
 
-        
-        history = self.model.fit(trainX, trainY, epochs=epochs, batch_size=batch_size, validation_split=0.1, verbose=1, callbacks=[early_stopping, tensorboard, cp_callback])
-        return history
+        with tensorflow.device('/GPU:0'):
+            history = self.model.fit(trainX, trainY, epochs=epochs, batch_size=batch_size, validation_split=0.1, verbose=1, callbacks=[early_stopping, tensorboard, cp_callback])
+            return history

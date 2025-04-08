@@ -79,7 +79,7 @@ def compile_validation(datanames):
             path = "validation_" + model + "_" + dn + ".csv"
             
             
-            validation = pd.read_csv(rf"C:\Users\Mikey\Documents\Github\Hysterisis-ML-Modeling\lib\lib\model_results\VALIDATION\{dn}")
+            validation = pd.read_csv(rf"C:\Users\Mikey\Documents\Github\Hysteresis-ML-Modeling\lib\lib\model_results\VALIDATION\{dn}")
             print(validation)
             val_list.append(validation)
 
@@ -92,4 +92,4 @@ def compile_validation(datanames):
 #compile_predictions(os.listdir())
 #compile_metrics()
 
-compile_validation(os.listdir(r"C:\Users\Mikey\Documents\Github\Hysterisis-ML-Modeling\lib\lib\model_results\VALIDATION"))
+compile_validation(os.listdir(r"C:\Users\Mikey\Documents\Github\Hysteresis-ML-Modeling\lib\lib\model_results\VALIDATION"))

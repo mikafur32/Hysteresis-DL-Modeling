@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import matplotlib.dates as mdates
+import joblib
 
 # Script for reading, preprocessing, and splitting time series data for ML model input
 
@@ -88,10 +89,17 @@ def ingest(csv, target, n_past=96, n_future=12, renames={}, train_range= None, t
         scaler_V = StandardScaler()
         scaler_WSS = StandardScaler()
 
+        # Fit and transform each scaler
         df['WL'] = scaler_WL.fit_transform(df["WL"].to_numpy().reshape(-1,1))
         df['Q'] = scaler_Q.fit_transform(df["Q"].to_numpy().reshape(-1,1))
         df['V'] = scaler_V.fit_transform(df["V"].to_numpy().reshape(-1,1))
         df['WSS'] = scaler_WSS.fit_transform(df["WSS"].to_numpy().reshape(-1,1))
+
+        # Save each scaler to disk
+        joblib.dump(scaler_WL, "scaler_WL.save")
+        joblib.dump(scaler_Q, "scaler_Q.save")
+        joblib.dump(scaler_V, "scaler_V.save")
+        joblib.dump(scaler_WSS, "scaler_WSS.save")
 
         transformed_df = df
 

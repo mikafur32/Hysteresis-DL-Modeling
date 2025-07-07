@@ -124,7 +124,7 @@ def evaluate(csv, saveto, columns, target, data_name, event_start, event_end,
 
 # Old function that works but trains multi times for multi events
 '''def evaluate(csv, saveto, columns, target, data_name, event_start, event_end, 
-             epochs= 1, train_test_ratio=0.8, train_range=None, test_range=None, 
+             epochs= 10, train_test_ratio=0.8, train_range=None, test_range=None, 
              n_past= 96, n_future= 12, train_flag= True, plotstep= "Month", scaler= True):
 
     date = datetime.now().strftime("%B_%d_%Y_%H_%M")  # Get current date-time for file naming

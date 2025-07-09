@@ -14,10 +14,6 @@ from model_defs.BidirectionalLSTMModel import BidirectionalLSTMModel
 from model_defs.GRUModel import GRUModel
 from tensorflow.keras.models import load_model
 
-'''
-TODO: 
-1. Feature importances for each
-'''
 
 # Function to calculate NSE normalized squared error
 def nseloss(y_true, y_pred):

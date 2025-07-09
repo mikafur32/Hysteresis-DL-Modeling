@@ -4,7 +4,8 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import matplotlib.dates as mdates
 import joblib
 
-# Script for reading, preprocessing, and splitting time series data for ML model input
+# Script for reading, preprocessing, and splitting time series data 
+# for ML model input
 
 
 # Function to read CSV data and preprocess
@@ -22,8 +23,6 @@ def read_in(csv, target, renames={}):
                                                         "2":np.float32,
                                                         "3":np.float32})"
     '''
-    
-    # So much work for a oneliner HAHA
     
     # Reorganizes columns to be "datetime", target, feature values (renames) 
     df =  df[['datetime'] + [target] + list(filter(lambda x: x!=target, list(renames.values())))] if( target in list(renames.values())) else df[['datetime'] +[target] + list(renames.values())]

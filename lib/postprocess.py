@@ -15,8 +15,8 @@ import joblib  # for loading saved scalers
 # For a given dataname (i.e., "4_5_BL_12hr_FL_1dyWSSVQ_WL", "4_17_1dy_FL_1dyWSSVQ_WL")
 # For all three trained models
 # Specify variables (USER - hi)
-dataname = "6_16_1dy_FL_12hr_BLWSSVQ_WL"
-shift = 72   # also have to change it one other place below... not sure if this is a constant 72 or if changes with FL or BL??
+dataname = "7_7_18hr_FL_12hr_BLWSSVQ_WL"
+shift = 120   # shift = n_past + n_future
 model_types = ["GRU", "Basic_LSTM", "Stacked_LSTM"]
 base_path = rf"C:\Users\Mikey\Documents\Github\Hysteresis-ML-Modeling\model_results\{dataname}"
 data = "C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\data\\Henry_4vars_2017_2023.csv"# args.data
@@ -81,7 +81,6 @@ def merge_with_observations(pred_df, obs_df, shift = shift):
 
 
 # Recalculate the evaluation statistics
-# REUSE FROM OG WE DECIDED ON
 def calculate_metrics(y_true, y_pred):
     return {
         "MSE": mean_squared_error(y_true, y_pred),
@@ -92,7 +91,6 @@ def calculate_metrics(y_true, y_pred):
 # Create plot for entire test period or event
 # DEFINE start_date and end_date probably!!!!
 # Include evaluation statistics 
-# USE WHAT WE HAD AS A BASE IF THIS ISNT NICE
 def plot_event(df, start_date, end_date, model_type):
     event_df = df[(df["datetime"] >= start_date) & (df["datetime"] <= end_date)]
 

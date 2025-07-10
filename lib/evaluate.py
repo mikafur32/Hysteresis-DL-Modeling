@@ -16,7 +16,7 @@ from keras import backend as K
 #print(os.getcwd())
 
 # Import required scripts/modules 
-import models_cuda  # old: model_base
+import models_cuda  
 import ingest, predict
 
 # Check if using the GPU

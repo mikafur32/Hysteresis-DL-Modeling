@@ -65,7 +65,7 @@ def train_test_split(df, train_range, test_range):
 
 # old ingest function - doesn't work for persistence model
 # Function to process and scale data for training and testing
-def ingest(csv, target, n_past=96, n_future=12, renames={}, train_range= None, test_range= None, train_test_ratio= None, scaler=True):
+#def ingest(csv, target, n_past=96, n_future=12, renames={}, train_range= None, test_range= None, train_test_ratio= None, scaler=True):
     
     df, all_dates = read_in(csv, target, renames)
 
@@ -127,7 +127,7 @@ def ingest(csv, target, n_past=96, n_future=12, renames={}, train_range= None, t
 
 
 # new ingest function.. idk doesn't quite work
-#def ingest(csv, target, n_past=96, n_future=12, renames={}, train_range=None, test_range=None, train_test_ratio=None, scaler=True):
+def ingest(csv, target, n_past=96, n_future=12, renames={}, train_range=None, test_range=None, train_test_ratio=None, scaler=True):
     df, all_dates = read_in(csv, target, renames)
 
     # If no range is assigned, will use the full range for training & testing

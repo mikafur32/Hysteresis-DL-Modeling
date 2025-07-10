@@ -15,7 +15,7 @@ import joblib  # for loading saved scalers
 # For a given dataname (i.e., "4_5_BL_12hr_FL_1dyWSSVQ_WL", "4_17_1dy_FL_1dyWSSVQ_WL")
 # For all three trained models
 # Specify variables (USER - hi)
-dataname = "7_7_18hr_FL_12hr_BLWSSVQ_WL"
+dataname = "7_9_18hr_FL_12hr_BLPersistence_WL"
 shift = 120   # shift = n_past + n_future
 model_types = ["GRU", "Basic_LSTM", "Stacked_LSTM"]
 base_path = rf"C:\Users\Mikey\Documents\Github\Hysteresis-ML-Modeling\model_results\{dataname}"

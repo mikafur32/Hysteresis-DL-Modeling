@@ -6,6 +6,8 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
+import matplotlib.dates as mdates
 import os
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.preprocessing import StandardScaler
@@ -15,7 +17,7 @@ import joblib  # for loading saved scalers
 # For a given dataname (i.e., "4_5_BL_12hr_FL_1dyWSSVQ_WL", "4_17_1dy_FL_1dyWSSVQ_WL")
 # For all three trained models
 # Specify variables (USER - hi)
-dataname = "8_6_12hr_FL_12hr_BLWSSV_Q"
+dataname = "8_6_12hr_FL_12hr_BLV_Q"
 shift = 96   # shift = n_past + n_future
 model_types = ["GRU", "Basic_LSTM", "Stacked_LSTM"]
 base_path = rf"C:\Users\Mikey\Documents\Github\Hysteresis-ML-Modeling\model_results\{dataname}"
@@ -100,16 +102,37 @@ def plot_event(df, start_date, end_date, model_type):
     plt.plot(event_df["datetime"], event_df["Q_pred_smooth"], label="Predicted Q (Smoothed)", color="fuchsia", linewidth=2)
 
     # Show metrics on plot
-    metrics_text = f"MSE: {metrics['MSE']:.3f}\nMAE: {metrics['MAE']:.3f}\nR²: {metrics['R2']:.3f}"
-    plt.gcf().text(0.75, 0.65, metrics_text, fontsize=16, bbox=dict(facecolor='white', alpha=0.5))
+    #metrics_text = f"MSE: {metrics['MSE']:.3f}\nMAE: {metrics['MAE']:.3f}\nR²: {metrics['R2']:.3f}"
+    # Format MSE with comma if in thousands, using 6 sig figs
+    mse=f"{metrics['MSE']:.6g}"
+    if metrics['MSE'] >=1000:
+        mse=f"{float(mse):,.6g}"
+
+    mae = f"{metrics['MAE']:.6g}"
+
+    metrics_text = (
+        f"MSE: {mse}\n"
+        f"MAE: {mae}\n"
+        f"R²: {metrics['R2']:.3f}"
+    )
+    plt.gcf().text(
+        0.75, 0.75,
+        metrics_text,
+        fontsize=16,
+        bbox=dict(facecolor='white',alpha=1.0)
+    )
+
 
     plt.title(f"{model_type} Predictions vs Observed ({start_date} to {end_date})", fontsize=16)
     plt.xlabel("Date", fontsize=16)
-    plt.ylabel("Discharge (Q)", fontsize=16)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
-    plt.legend()
+    plt.ylabel("Discharge (cfs)", fontsize=16)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.gca().yaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{x:,.0f}'))
+    #plt.legend()
     plt.grid()
+
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
 
     output_path = os.path.join(base_path, model_type, "predict_results", f"{model_type}_event_{start_date}_{end_date}_predictions.png")
     plt.savefig(output_path, dpi=300)

@@ -7,7 +7,7 @@ from sklearn.preprocessing import StandardScaler
 import joblib  # for loading saved scalers
 
 
-#chage all Q_pred to WL 
+#changed all Q to WL 
 
 
 # Read in ML model predictions
@@ -31,19 +31,19 @@ def load_and_clean_predictions(model_type):
 
 def load_observed_data():
     df_obs = pd.read_csv(data, parse_dates=["datetime"])
-    df_obs = df_obs[["datetime", "Q"]]
-    df_obs = df_obs.rename(columns={"Q": "Q_obs"})
+    df_obs = df_obs[["datetime", "WL"]]
+    df_obs = df_obs.rename(columns={"WL": "WL_obs"})
     return df_obs
 
 #scaler_path = rf"C:\Users\Mikey\Documents\Github\Hysteresis-ML-Modeling\model_results\{dataname}\scaler.save"
 
 #load scaler for targetted variable - change between runs as needed
-scaler_Q = joblib.load("scaler_Q.save")
+scaler_WL = joblib.load("scaler_WL.save")
 
 # Unscale predictions using saved StandardScaler
 def unscale_predictions(df, scaler):
     # Reshape to (n_samples, 1) as expected by inverse_transform
-    df["WL_pred"] = scaler_Q.inverse_transform(df[["WL_pred"]])
+    df["WL_pred"] = scaler_WL.inverse_transform(df[["WL_pred"]])
     return df
 
 # OR?
@@ -53,7 +53,7 @@ def unscale_predictions(df, scaler):
 # Smooth the predictions!!!
 # 5-point Moving Average 
 def smooth_predictions(df, window=50):
-    df["Q_pred_smooth"] = df["WL_pred"].rolling(window=window, center=True, min_periods=1).mean()
+    df["WL_pred_smooth"] = df["WL_pred"].rolling(window=window, center=True, min_periods=1).mean()
     return df
 
 
@@ -67,9 +67,9 @@ def merge_with_observations(pred_df, obs_df, shift = shift):
     obs_df = obs_df.sort_values("datetime").reset_index(drop=True)
     # Shift the observed values backward (to earlier timestamps)
     obs_df_shifted = obs_df.copy()
-    obs_df_shifted["Q_obs"] = obs_df_shifted["Q_obs"].shift(-shift)
+    obs_df_shifted["WL_obs"] = obs_df_shifted["WL_obs"].shift(-shift)
     # Drop rows with NaN after shift (these are at the end)
-    obs_df_shifted = obs_df_shifted.dropna(subset=["Q_obs"]).reset_index(drop=True)
+    obs_df_shifted = obs_df_shifted.dropna(subset=["WL_obs"]).reset_index(drop=True)
     # Keep only the original datetimes for alignment
     obs_df_shifted["datetime"] = obs_df["datetime"][:len(obs_df_shifted)].reset_index(drop=True)
     # Merge on datetime
@@ -93,10 +93,10 @@ def calculate_metrics(y_true, y_pred):
 def plot_event(df, start_date, end_date, model_type):
     event_df = df[(df["datetime"] >= start_date) & (df["datetime"] <= end_date)]
 
-    metrics = calculate_metrics(event_df["Q_obs"], event_df["Q_pred_smooth"])
+    metrics = calculate_metrics(event_df["WL_obs"], event_df["WL_pred_smooth"])
     plt.figure(figsize=(12, 6))
-    plt.plot(event_df["datetime"], event_df["Q_obs"], label="Observed Q", color="black", linewidth=2)
-    plt.plot(event_df["datetime"], event_df["Q_pred_smooth"], label="Predicted Q (Smoothed)", color="fuchsia", linewidth=2)
+    plt.plot(event_df["datetime"], event_df["WL_obs"], label="Observed WL", color="black", linewidth=2)
+    plt.plot(event_df["datetime"], event_df["WL_pred_smooth"], label="Predicted WL (Smoothed)", color="fuchsia", linewidth=2)
 
     # Show metrics on plot
     metrics_text = f"MSE: {metrics['MSE']:.3f}\nMAE: {metrics['MAE']:.3f}\nR²: {metrics['R2']:.3f}"
@@ -104,7 +104,7 @@ def plot_event(df, start_date, end_date, model_type):
 
     plt.title(f"{model_type} Predictions vs Observed ({start_date} to {end_date})", fontsize=16)
     plt.xlabel("Date", fontsize=16)
-    plt.ylabel("Discharge (Q)", fontsize=16)
+    plt.ylabel("Water Level (WL)", fontsize=16)
     plt.xticks(fontsize=12)
     plt.yticks(fontsize=12)
     plt.legend()

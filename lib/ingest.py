@@ -95,6 +95,7 @@ def train_test_split(df, train_range, test_range):
         df['WSS'] = scaler_WSS.fit_transform(df["WSS"].to_numpy().reshape(-1,1))
 
         # Save each scaler to disk
+        #This is accessed in postprocess and needs to be run for each new data set with reliable results
         joblib.dump(scaler_WL, "scaler_WL.save")
         joblib.dump(scaler_Q, "scaler_Q.save")
         joblib.dump(scaler_V, "scaler_V.save")
@@ -126,7 +127,7 @@ def train_test_split(df, train_range, test_range):
     return train_scaled, test_scaled, train_dates, test_dates, all_dates, scaler_WL
 
 
-# new ingest function.. idk doesn't quite work
+# new ingest function..
 def ingest(csv, target, n_past=96, n_future=12, renames={}, train_range=None, test_range=None, train_test_ratio=None, scaler=True):
     df, all_dates = read_in(csv, target, renames)
 

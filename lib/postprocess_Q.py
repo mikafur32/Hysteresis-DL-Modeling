@@ -17,7 +17,7 @@ import joblib  # for loading saved scalers
 # For a given dataname (i.e., "4_5_BL_12hr_FL_1dyWSSVQ_WL", "4_17_1dy_FL_1dyWSSVQ_WL")
 # For all three trained models
 # Specify variables (USER - hi)
-dataname = "8_6_12hr_FL_12hr_BLV_Q"
+dataname = "8_12_12hr_FL_12hr_BLWSSQWL_Q"
 shift = 96   # shift = n_past + n_future
 model_types = ["GRU", "Basic_LSTM", "Stacked_LSTM"]
 base_path = rf"C:\Users\Mikey\Documents\Github\Hysteresis-ML-Modeling\model_results\{dataname}"
@@ -28,7 +28,7 @@ def load_and_clean_predictions(model_type):
     pred_path = os.path.join(base_path, model_type, "predict_results", f"{model_type}_predicts.csv")
     df = pd.read_csv(pred_path)
     df = df.loc[:, ~df.columns.duplicated()]  # remove duplicated columns
-    df = df.rename(columns={df.columns[0]: "datetime", df.columns[1]: "WL_pred"})
+    df = df.rename(columns={df.columns[0]: "datetime", df.columns[1]: "Q_pred"})
     df["datetime"] = pd.to_datetime(df["datetime"])
     return df
 
@@ -36,6 +36,7 @@ def load_observed_data():
     df_obs = pd.read_csv(data, parse_dates=["datetime"])
     df_obs = df_obs[["datetime", "Q"]]
     df_obs = df_obs.rename(columns={"Q": "Q_obs"})
+    df_obs["Q_obs"] = df_obs["Q_obs"] * 0.02831 # convert cfs to cms
     return df_obs
 
 #scaler_path = rf"C:\Users\Mikey\Documents\Github\Hysteresis-ML-Modeling\model_results\{dataname}\scaler.save"
@@ -46,7 +47,8 @@ scaler_Q = joblib.load("scaler_Q.save")
 # Unscale predictions using saved StandardScaler
 def unscale_predictions(df, scaler):
     # Reshape to (n_samples, 1) as expected by inverse_transform
-    df["WL_pred"] = scaler_Q.inverse_transform(df[["WL_pred"]])
+    df["Q_pred"] = scaler_Q.inverse_transform(df[["Q_pred"]])
+    df["Q_pred"] = df["Q_pred"] * 0.02831
     return df
 
 # OR?
@@ -56,7 +58,7 @@ def unscale_predictions(df, scaler):
 # Smooth the predictions!!!
 # 5-point Moving Average 
 def smooth_predictions(df, window=50):
-    df["Q_pred_smooth"] = df["WL_pred"].rolling(window=window, center=True, min_periods=1).mean()
+    df["Q_pred_smooth"] = df["Q_pred"].rolling(window=window, center=True, min_periods=1).mean()
     return df
 
 
@@ -64,19 +66,23 @@ def smooth_predictions(df, window=50):
 #def merge_with_observations(pred_df, obs_df):
 #    return pd.merge(pred_df, obs_df, on="datetime", how="inner")
 # With SHIFTING:
-def merge_with_observations(pred_df, obs_df, shift = shift):
+def merge_with_observations(pred_df, obs_df, shift=shift):
     # Sort both DataFrames just in case
     pred_df = pred_df.sort_values("datetime").reset_index(drop=True)
     obs_df = obs_df.sort_values("datetime").reset_index(drop=True)
-    # Shift the observed values backward (to earlier timestamps)
-    obs_df_shifted = obs_df.copy()
-    obs_df_shifted["Q_obs"] = obs_df_shifted["Q_obs"].shift(-shift)
-    # Drop rows with NaN after shift (these are at the end)
-    obs_df_shifted = obs_df_shifted.dropna(subset=["Q_obs"]).reset_index(drop=True)
+    
+    # Shift the predicted values forward (to later timestamps)
+    pred_df_shifted = pred_df.copy()
+    pred_df_shifted["Q_pred"] = pred_df_shifted["Q_pred"].shift(shift)
+    
+    # Drop rows with NaN after shift (these are at the beginning)
+    pred_df_shifted = pred_df_shifted.dropna(subset=["Q_pred"]).reset_index(drop=True)
+    
     # Keep only the original datetimes for alignment
-    obs_df_shifted["datetime"] = obs_df["datetime"][:len(obs_df_shifted)].reset_index(drop=True)
+    pred_df_shifted["datetime"] = pred_df["datetime"][shift:shift+len(pred_df_shifted)].reset_index(drop=True)
+    
     # Merge on datetime
-    merged = pd.merge(pred_df, obs_df_shifted, on="datetime", how="inner")
+    merged = pd.merge(pred_df_shifted, obs_df, on="datetime", how="inner")
     return merged
 
 
@@ -93,50 +99,118 @@ def calculate_metrics(y_true, y_pred):
 # Create plot for entire test period or event
 # DEFINE start_date and end_date probably!!!!
 # Include evaluation statistics 
+def calculate_peak_metrics(y_true, y_pred, datetime_index):
+    """Calculate peak metrics with enhanced validation and debugging"""
+    print("\n=== Debugging Peak Detection ===")
+    print(f"Input sizes - y_true: {len(y_true)}, y_pred: {len(y_pred)}, times: {len(datetime_index)}")
+    
+    metrics = {
+        "Peak_Magnitude_Diff": np.nan,
+        "Peak_Timing_Diff": np.nan,
+        "Observed_Peak_Value": np.nan,
+        "Predicted_Peak_Value": np.nan
+    }
+
+    try:
+        # Ensure we have valid data
+        if y_true.isna().all() or y_pred.isna().all():
+            print("Warning: All values are NaN")
+            return metrics
+            
+        # Convert to numpy arrays (handling pandas Series)
+        y_true = y_true.values if hasattr(y_true, 'values') else np.array(y_true)
+        y_pred = y_pred.values if hasattr(y_pred, 'values') else np.array(y_pred)
+        datetime_index = datetime_index.values if hasattr(datetime_index, 'values') else np.array(datetime_index)
+        
+        # Find peaks using nanargmax (ignores NaN values)
+        obs_peak_idx = np.nanargmax(y_true)
+        pred_peak_idx = np.nanargmax(y_pred)
+        
+        print(f"Peak indices - Obs: {obs_peak_idx}, Pred: {pred_peak_idx}")
+        print(f"Sample values around peaks:")
+        print(f"Observed: {y_true[obs_peak_idx-2:obs_peak_idx+3]}")
+        print(f"Predicted: {y_pred[pred_peak_idx-2:pred_peak_idx+3]}")
+        
+        # Get peak values and times
+        obs_peak_value = y_true[obs_peak_idx]
+        pred_peak_value = y_pred[pred_peak_idx]
+        obs_peak_time = datetime_index[obs_peak_idx]
+        pred_peak_time = datetime_index[pred_peak_idx]
+        
+        # Calculate magnitude difference
+        metrics["Peak_Magnitude_Diff"] = float(abs(obs_peak_value - pred_peak_value))
+        metrics["Observed_Peak_Value"] = float(obs_peak_value)
+        metrics["Predicted_Peak_Value"] = float(pred_peak_value)
+        
+        # Calculate timing difference (handle both datetime and timedelta)
+        if isinstance(obs_peak_time, np.datetime64) and isinstance(pred_peak_time, np.datetime64):
+            time_diff = (pred_peak_time - obs_peak_time) / np.timedelta64(1, 'h')
+        else:
+            time_diff = np.nan
+            print("Warning: Unexpected time format - cannot calculate time difference")
+        
+        metrics["Peak_Timing_Diff"] = float(time_diff)
+        
+        print("\n=== Peak Metrics ===")
+        print(f"Observed Peak: {obs_peak_value:.2f} m at {obs_peak_time}")
+        print(f"Predicted Peak: {pred_peak_value:.2f} m at {pred_peak_time}")
+        print(f"Magnitude Difference: {metrics['Peak_Magnitude_Diff']:.2f} cms")
+        print(f"Timing Difference: {metrics['Peak_Timing_Diff']:.2f} hours")
+        
+    except Exception as e:
+        print(f"Error in peak detection: {str(e)}", exc_info=True)
+    
+    return metrics
+
 def plot_event(df, start_date, end_date, model_type):
     event_df = df[(df["datetime"] >= start_date) & (df["datetime"] <= end_date)]
-
-    metrics = calculate_metrics(event_df["Q_obs"], event_df["Q_pred_smooth"])
-    plt.figure(figsize=(12, 6))
+    
+    # Calculate all metrics
+    base_metrics = {
+        "MSE": mean_squared_error(event_df["Q_obs"], event_df["Q_pred_smooth"]),
+        "MAE": mean_absolute_error(event_df["Q_obs"], event_df["Q_pred_smooth"]),
+        "R2": r2_score(event_df["Q_obs"], event_df["Q_pred_smooth"])
+    }
+    
+    peak_metrics = calculate_peak_metrics(event_df["Q_obs"], event_df["Q_pred_smooth"], 
+                                        event_df["datetime"])
+    
+    # Create figure with tight layout and adjusted subplot parameters
+    plt.figure(figsize=(11, 5.5))
+    plt.subplots_adjust(bottom=0.18, left=0.12, right=0.88, top=0.95)
+    
     plt.plot(event_df["datetime"], event_df["Q_obs"], label="Observed Q", color="black", linewidth=2)
-    plt.plot(event_df["datetime"], event_df["Q_pred_smooth"], label="Predicted Q (Smoothed)", color="fuchsia", linewidth=2)
-
-    # Show metrics on plot
-    #metrics_text = f"MSE: {metrics['MSE']:.3f}\nMAE: {metrics['MAE']:.3f}\nR²: {metrics['R2']:.3f}"
-    # Format MSE with comma if in thousands, using 6 sig figs
-    mse=f"{metrics['MSE']:.6g}"
-    if metrics['MSE'] >=1000:
-        mse=f"{float(mse):,.6g}"
-
-    mae = f"{metrics['MAE']:.6g}"
-
+    plt.plot(event_df["datetime"], event_df["Q_pred_smooth"], label="Predicted Q", color="fuchsia", linewidth=2)
+    
+    # Format metrics text boxes
     metrics_text = (
-        f"MSE: {mse}\n"
-        f"MAE: {mae}\n"
-        f"R²: {metrics['R2']:.3f}"
+        f"MAE: {base_metrics['MAE']:.3f}\n"
+        f"R²: {base_metrics['R2']:.3f}\n"
+        f"Magnitude: {peak_metrics['Peak_Magnitude_Diff']:.2f} cms\n"
+        f"Timing: {peak_metrics['Peak_Timing_Diff']:.2f} hrs"
     )
+    
+    # Add text box
     plt.gcf().text(
-        0.75, 0.75,
+        0.62, 0.73,  # Adjusted position
         metrics_text,
-        fontsize=16,
-        bbox=dict(facecolor='white',alpha=1.0)
+        fontsize=18,
+        bbox=dict(facecolor='white', alpha=1.0)
     )
-
-
-    plt.title(f"{model_type} Predictions vs Observed ({start_date} to {end_date})", fontsize=16)
-    plt.xlabel("Date", fontsize=16)
-    plt.ylabel("Discharge (cfs)", fontsize=16)
-    plt.xticks(fontsize=14)
-    plt.yticks(fontsize=14)
-    plt.gca().yaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{x:,.0f}'))
-    #plt.legend()
+    
+    plt.xlabel("Date", fontsize=24)
+    plt.ylabel("Discharge (cms)", fontsize=24)
+    plt.xticks(fontsize=19)
+    plt.yticks(fontsize=19)
     plt.grid()
-
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
-
-    output_path = os.path.join(base_path, model_type, "predict_results", f"{model_type}_event_{start_date}_{end_date}_predictions.png")
-    plt.savefig(output_path, dpi=300)
+    
+    output_path = os.path.join(base_path, model_type, "predict_results", 
+                             f"{model_type}_event_{start_date}_{end_date}_predictions.png")
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', pad_inches=0.1)
     plt.close()
+    
+    return {**base_metrics, **peak_metrics}
 
 
 # RUN IT ALL!
@@ -181,3 +255,7 @@ if __name__ == "__main__":
 # Or just fix the one that is currently in main script
 
 # Compare Basic, Stacked LSTM, and GRU and BL with same FL
+
+# Create persistence plot here too for comparison!
+    # Simply take the prediction and shift by n_future for the persistence plots for each event
+    # Name these files differently, e.g., "Persistence_....png"

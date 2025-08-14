@@ -19,7 +19,7 @@ n_past = 48 #args.n_past  # Back Looking (BL) steps of 15-minute increments (for
 n_future = 48 #args.n_future  # Forward Looking (FL) steps of 15-minute increments (for this data)
 test_range = [pd.Timestamp("1/1/2022 0:00"), pd.Timestamp("12/31/2022 23:45")]
 event_range = [pd.Timestamp('2/10/2022 0:00'), pd.Timestamp('3/17/2022 23:45')]
-dataname = "8_6_12hr_FL_12hr_BL"#args.dn
+dataname = "8_12_12hr_FL_12hr_BL"#args.dn
 
 # From outdated version, use if you want to combine new postprocess.py with model_noCLI.py
 #train = "n" #args.train
@@ -60,11 +60,22 @@ WSS_WL = {"target": "WL", "features": {"WSS": "WSS"}, "Name": "WSS_WL"}
 #WSS_Q = {"target": "Q", "features": {"WSS": "WSS"}, "Name": "WSS_Q"}
 WL_WL = {"target": "WL", "features": { "WL":"WL"}, "Name": "Persistence_WL"}
 WSSV_WL = {"target": "WL", "features": { "WSS": "WSS", "V": "V"}, "Name": "WSSV_WL"}
+WSSQ_WL = {"target": "WL", "features": { "WSS": "WSS", "Q": "Q"}, "Name": "WSSQ_WL"}
+WSS_Q = {"target": "Q", "features": { "WSS": "WSS"}, "Name": "WSS_Q"}
+
+WL_Q = {"target": "Q", "features": { "WL": "WL"}, "Name": "WL_Q"}
+WSSWL_Q = {"target":"Q", "features": { "WSS": "WSS", "WL": "WL"}, "Name": "WSSWL_Q"}
+VWL_Q = {"target": "Q", "features": { "V": "V", "WL": "WL"}, "Name": "VWL_Q"}
+VQWL_Q = {"target": "Q", "features": { "V": "V", "Q": "Q", "WL": "WL"}, "Name": "VQWL_Q"}
+WSSVWL_Q= {"target": "Q", "features": { "WSS": "WSS", "V": "V", "WL": "WL"}, "Name": "WSSVWL_Q"}
+WSSQWL_Q= {"target": "Q", "features": { "WSS": "WSS", "Q": "Q", "WL": "WL"}, "Name": "WSSQWL_Q"}
+VQWL_WL = {"target": "WL", "features": { "V": "V", "Q": "Q", "WL": "WL"}, "Name": "VQWL_WL"}
 
 # Define tests to run!!
 #tests= [V_WL, WSS_WL, WSSV_WL, WSSVQ_WL, VQ_WL, Q_WL]  #WSSVQ_WL, WSS_V, WSSV_Q, WL_WL]
-tests= [WSSV_Q, V_Q, VQ_WL]
-# later, rerun WSS_V with 10 epochs and fix scaling stuff
+tests= [WSSQ_WL, VQWL_Q, WSSQWL_Q]
+#tests= [WSSV_Q]
+
 
 for test in tests:
         

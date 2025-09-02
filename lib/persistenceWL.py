@@ -9,10 +9,10 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import joblib
 
 # Configuration
-dataname = "Persistence_Model_12hr"
-shift = 0  # 12 hours in 15-minute intervals (15min * 4 = 1hr, 12*4=48)
+dataname = "Persistence_Model_1wk"
+shift = 672  # 12 hours in 15-minute intervals (15min * 4 = 1hr, 12*4=48)
 data_path = "C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\data\\Henry_4vars_2017_2023.csv"
-output_dir = r"C:\Users\Mikey\Documents\Github\Hysteresis-ML-Modeling\model_results\Persistence_Model_12hr_WL"
+output_dir = r"C:\Users\Mikey\Documents\Github\Hysteresis-ML-Modeling\model_results\Persistence_Model_1wk_WL"
 os.makedirs(output_dir, exist_ok=True)
 
 # Load scaler (same as your other script)
@@ -22,7 +22,7 @@ def load_observed_data():
     """Load and prepare observed data"""
     df = pd.read_csv(data_path, parse_dates=["datetime"])
     df = df[["datetime", "WL"]].rename(columns={"WL": "WL_obs"})
-    df["WL_obs"] = df["WL_obs"] * 0.3038
+    df["WL_obs"] = df["WL_obs"] * 0.3048
     return df
 
 def create_persistence_predictions(obs_df, shift):
@@ -31,17 +31,6 @@ def create_persistence_predictions(obs_df, shift):
     pred_df["WL_pred"] = pred_df["WL_obs"].shift(shift)
     pred_df = pred_df.dropna().reset_index(drop=True)
     return pred_df
-
-#def unscale_predictions(df, scaler):
-    """Unscale predictions using saved StandardScaler"""
-    df["WL_pred"] = scaler.inverse_transform(df[["WL_pred"]])
-    df["WL_obs"] = scaler.inverse_transform(df[["WL_obs"]])
-    return df
-
-def smooth_predictions(df, window=50):
-    """Apply smoothing to predictions"""
-    df["WL_pred_smooth"] = df["WL_pred"].rolling(window=window, center=True, min_periods=1).mean()
-    return df
 
 def calculate_metrics(y_true, y_pred):
     """Calculate evaluation metrics"""
@@ -120,13 +109,13 @@ def plot_event(df, start_date, end_date, output_dir):
     
     # Calculate all metrics (same as ML version)
     base_metrics = {
-        "MSE": mean_squared_error(event_df["WL_obs"], event_df["WL_pred_smooth"]),
-        "MAE": mean_absolute_error(event_df["WL_obs"], event_df["WL_pred_smooth"]),
-        "R2": r2_score(event_df["WL_obs"], event_df["WL_pred_smooth"])
+        "MSE": mean_squared_error(event_df["WL_obs"], event_df["WL_pred"]),
+        "MAE": mean_absolute_error(event_df["WL_obs"], event_df["WL_pred"]),
+        "R2": r2_score(event_df["WL_obs"], event_df["WL_pred"])
     }
     
     # Calculate peak metrics (same function as ML version)
-    peak_metrics = calculate_peak_metrics(event_df["WL_obs"], event_df["WL_pred_smooth"], 
+    peak_metrics = calculate_peak_metrics(event_df["WL_obs"], event_df["WL_pred"], 
                                         event_df["datetime"])
     
     # Create figure with identical dimensions and margins
@@ -135,7 +124,7 @@ def plot_event(df, start_date, end_date, output_dir):
     
     # Plot with same styling
     plt.plot(event_df["datetime"], event_df["WL_obs"], label="Observed WL", color="black", linewidth=2)
-    plt.plot(event_df["datetime"], event_df["WL_pred_smooth"], label="Persistence Model (12hr)", color="fuchsia", linewidth=2)
+    plt.plot(event_df["datetime"], event_df["WL_pred"], label="Persistence Model (12hr)", color="fuchsia", linewidth=2)
     
     # Format metrics text box (identical to ML version)
     metrics_text = (
@@ -147,7 +136,7 @@ def plot_event(df, start_date, end_date, output_dir):
     
     # Identical text box positioning and styling
     plt.gcf().text(
-        0.71, 0.69,
+        0.65, 0.73,
         metrics_text,
         fontsize=18,
         bbox=dict(facecolor='white', alpha=1.0)
@@ -186,15 +175,12 @@ if __name__ == "__main__":
     # Create persistence predictions
     pred_df = create_persistence_predictions(obs_df, shift)
     
-    # Unscale predictions and observations
-   # pred_df = unscale_predictions(pred_df, scaler_Q)
-    
     # Debug print
     print("\nUnscaled Data Summary:")
     print(pred_df[["WL_obs", "WL_pred"]].describe())
     
     # Smooth predictions
-    pred_df = smooth_predictions(pred_df)
+   # pred_df = smooth_predictions(pred_df)
     
     # Save predictions
     save_predictions(pred_df, output_dir)

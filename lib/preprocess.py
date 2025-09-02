@@ -8,8 +8,8 @@ import seaborn as sns
 from scipy.signal import find_peaks
 
 # Load the data
-#file_path = "C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\data\\Henry_4vars_2017_2023.csv"
-file_path = "C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\data\\Ohio_River_data_preprocessed.csv"
+file_path = "C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\data\\Henry_4vars_2017_2023.csv"
+#file_path = "C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\data\\Ohio_River_data_preprocessed.csv"
 df = pd.read_csv(file_path, skiprows=3)
 
 print(df.columns)  # This will show the actual column names
@@ -24,8 +24,8 @@ df['year'] = df['datetime'].dt.year
 df['Q_smooth'] = df['Q'].rolling(window=5, center=True).mean()
 
 # Define event size categories based on peak Q thresholds
-#bins = [5297, 44002, 52477, 81223, np.inf]   # cfs (model-generated data)
-bins = [4000, 11593, 13653, 14600, np.inf]   # cms (KD's observed data)
+bins = [5297, 44002, 52477, 81223, np.inf]   # cfs (model-generated data)
+#bins = [4000, 11593, 13653, 14600, np.inf]   # cms (KD's observed data)
 labels = ['Base', 'Minor', 'Moderate', 'Major']
 
 # Identify peaks in Q to detect events
@@ -93,7 +93,7 @@ for peak_idx in q_peaks:
 
 # Convert to DataFrame and save CSV
 events_df = pd.DataFrame(events)
-events_df.to_csv("C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\data\\event_lag_analysis_OH.csv", index=False)
+#events_df.to_csv("C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\data\\event_lag_analysis_OH.csv", index=False)
 
 
 # Categorize events by peak Q (worked this into above I think)
@@ -113,38 +113,40 @@ print(stats)
 # Create box plots
 plt.figure(figsize=(12, 6))
 sns.boxplot(x='Category', y='lag_WSS_Q', data=events_df, palette='Blues')
-plt.xlabel('Event Size Category')
-plt.ylabel('Lag WSS-Q (hours)')
-plt.title('Box Plot of Lag WSS-Q by Event Size')
+plt.xlabel('Event Size Category', fontsize=16)
+plt.ylabel('Lag WSS-Q (hours)', fontsize=16)
+plt.title('Box Plot of Lag WSS-Q by Event Size', fontsize=16)
+plt.tick_params(axis='both', labelsize=16)
 plt.savefig("C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\data\\boxplot_lag_WSS_Q_OH.png")
 plt.show()
 
 plt.figure(figsize=(12, 6))
 sns.boxplot(x='Category', y='lag_WSS_WL', data=events_df, palette='Reds')
-plt.xlabel('Event Size Category')
-plt.ylabel('Lag WSS-WL (hours)')
-plt.title('Box Plot of Lag WSS-WL by Event Size')
+plt.xlabel('Event Size Category', fontsize=16)
+plt.ylabel('Lag WSS-WL (hours)', fontsize=16)
+plt.title('Box Plot of Lag WSS-WL by Event Size', fontsize=16)
+plt.tick_params(axis='both', labelsize=16)
 plt.savefig("C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\data\\boxplot_lag_WSS_WL_OH.png")
 plt.show()
 
 
 # Define streamflow thresholds for categories
 # cfs (model-generated data)
-'''category_thresholds = {
+category_thresholds = {
     "Base": 5297,
     "Minor": 44002,
     "Moderate": 52477,
     "Major": 81223,
     "Extreme": np.inf  # Extreme is an open-ended category, so we won't plot a line for it
-}''' 
+}
 # cms (KD's observational data)
-category_thresholds = {
+'''category_thresholds = {
     "Base": 4000,
     "Minor": 11593,
     "Moderate": 13653,
     "Major": 14600,
     "Extreme": np.inf  # Extreme is an open-ended category, so we won't plot a line for it
-}
+}'''
 
 
 # Plot time series for each year with detected peaks and category lines
@@ -167,9 +169,10 @@ for year in range(2017, 2024):
                      verticalalignment='bottom', horizontalalignment='right', 
                      bbox=dict(facecolor='white', alpha=0.6, edgecolor='none'))
             
-    plt.xlabel('Date')
-    plt.ylabel('Q')
-    plt.title(f'Streamflow (Q) Time Series - {year}')
+    plt.xlabel('Date', fontsize=16)
+    plt.ylabel('Q', fontsize=16)
+    plt.title(f'Streamflow (Q) Time Series - {year}', fontsize=16)
+    plt.tick_params(axis='both', labelsize=16)
     plt.legend()
     plt.savefig(f"C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\data\\Q_time_series_{year}_OH.png")
     #plt.show()  # Commenting out for now

@@ -15,11 +15,12 @@ data = "C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\data\\Henry
 saveto = "C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\model_results" # args.saveto
 model_names = "Basic_LSTM" # args.model # "Basic_LSTM" or "all"
 train_range = "['1/1/2017 0:00','12/31/2021 23:45']" #args.train_range
-n_past = 48 #args.n_past  # Back Looking (BL) steps of 15-minute increments (for this data)
-n_future = 48 #args.n_future  # Forward Looking (FL) steps of 15-minute increments (for this data)
+n_past = 4 #args.n_past  # Back Looking (BL) steps of 15-minute increments (for this data)
+n_future = 60 #args.n_future  # Forward Looking (FL) steps of 15-minute increments (for this data)
 test_range = [pd.Timestamp("1/1/2022 0:00"), pd.Timestamp("12/31/2022 23:45")]
 event_range = [pd.Timestamp('2/10/2022 0:00'), pd.Timestamp('3/17/2022 23:45')]
-dataname = "8_12_12hr_FL_12hr_BL"#args.dn
+dataname = "8_29_15hr_FL_1hr_BL"#args.dn
+
 
 # From outdated version, use if you want to combine new postprocess.py with model_noCLI.py
 #train = "n" #args.train
@@ -42,13 +43,9 @@ print("Raw arguments:", sys.argv)
 # =============================================================================
 
 
-# Current model definition
+# Model definitions
 WSSVQ_WL = {"target": "WL", "features": { "WSS": "WSS", "V": "V", "Q": "Q"}, "Name": "WSSVQ_WL"}
-
-# Waterfall LSTM Definitions (old)
-#WSS_V = {"target": "V", "features": { "WSS": "WSS"}, "Name": "WSS_V"}
 WSSV_Q = {"target": "Q", "features": { "WSS": "WSS", "V": "V"}, "Name": "WSSV_Q"}
-#WSSVQ_WL = {"target": "WL", "features": { "WSS": "WSS", "V": "V", "Q": "Q"}, "Name": "WSSVQ_WL"}
 
 # Other LSTM variations (to play with to prove concept)
 WSS_V = {"target": "V", "features": { "WSS": "WSS"}, "Name": "WSS_V"}
@@ -57,7 +54,6 @@ V_WL = {"target": "WL", "features": {"V": "V"}, "Name": "V_WL"}
 Q_WL = {"target": "WL", "features": {"Q": "Q"}, "Name": "Q_WL"}
 VQ_WL={"target": "WL", "features": {"V": "V", "Q": "Q"}, "Name": "VQ_WL"}
 WSS_WL = {"target": "WL", "features": {"WSS": "WSS"}, "Name": "WSS_WL"}
-#WSS_Q = {"target": "Q", "features": {"WSS": "WSS"}, "Name": "WSS_Q"}
 WL_WL = {"target": "WL", "features": { "WL":"WL"}, "Name": "Persistence_WL"}
 WSSV_WL = {"target": "WL", "features": { "WSS": "WSS", "V": "V"}, "Name": "WSSV_WL"}
 WSSQ_WL = {"target": "WL", "features": { "WSS": "WSS", "Q": "Q"}, "Name": "WSSQ_WL"}
@@ -70,11 +66,14 @@ VQWL_Q = {"target": "Q", "features": { "V": "V", "Q": "Q", "WL": "WL"}, "Name": 
 WSSVWL_Q= {"target": "Q", "features": { "WSS": "WSS", "V": "V", "WL": "WL"}, "Name": "WSSVWL_Q"}
 WSSQWL_Q= {"target": "Q", "features": { "WSS": "WSS", "Q": "Q", "WL": "WL"}, "Name": "WSSQWL_Q"}
 VQWL_WL = {"target": "WL", "features": { "V": "V", "Q": "Q", "WL": "WL"}, "Name": "VQWL_WL"}
+WSSVQ_Q= {"target": "Q", "features": { "WSS": "WSS", "Q": "Q", "V": "V"}, "Name": "WSSVQ_Q"}
+
+WSSVQWL_WL= {"target": "WL", "features": { "WSS": "WSS", "V": "V", "Q": "Q", "WL": "WL"}, "Name": "WSSVQWL_WL"}
+WSSVQWL_Q= {"target": "Q", "features": { "WSS": "WSS", "V": "V", "Q": "Q", "WL": "WL"}, "Name": "WSSVQWL_Q"}
 
 # Define tests to run!!
 #tests= [V_WL, WSS_WL, WSSV_WL, WSSVQ_WL, VQ_WL, Q_WL]  #WSSVQ_WL, WSS_V, WSSV_Q, WL_WL]
-tests= [WSSQ_WL, VQWL_Q, WSSQWL_Q]
-#tests= [WSSV_Q]
+tests= [WSSVQ_WL]
 
 
 for test in tests:

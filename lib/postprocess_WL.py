@@ -10,15 +10,13 @@ import joblib  # for loading saved scalers
 import numpy as np
 from scipy.signal import find_peaks
 
-#changed all Q to WL 
-
 
 # Read in ML model predictions
 # For a given dataname (i.e., "4_5_BL_12hr_FL_1dyWSSVQ_WL", "4_17_1dy_FL_1dyWSSVQ_WL")
 # For all three trained models
 # Specify variables (USER - hi)
-dataname = "8_8_12hr_FL_12hr_BLVQ_WL"
-shift = 96   # shift = n_past + n_future
+dataname = "8_29_15hr_FL_1hr_BLWSSVQ_WL"
+shift = 64   # shift = n_past + n_future
 model_types = ["GRU", "Basic_LSTM", "Stacked_LSTM"]
 base_path = rf"C:\Users\Mikey\Documents\Github\Hysteresis-ML-Modeling\model_results\{dataname}"
 data = "C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\data\\Henry_4vars_2017_2023.csv"# args.data
@@ -170,6 +168,7 @@ def plot_event(df, start_date, end_date, model_type):
     plt.plot(event_df["datetime"], event_df["WL_pred_smooth"], label="Predicted WL", color="fuchsia", linewidth=2)
     
     # Format metrics text boxes
+    # MODIFY THIS IF WANT TO REMOVE SOME METRICS FROM PLOT
     metrics_text = (
         f"MAE: {base_metrics['MAE']:.3f}\n"
         f"R²: {base_metrics['R2']:.3f}\n"
@@ -179,9 +178,10 @@ def plot_event(df, start_date, end_date, model_type):
     
     # Add text box
     plt.gcf().text(
-        0.65, 0.73,  # Adjusted position
+        0.63, 0.72,  # Adjusted position (left to right, top to bottom)
+        #0.7, 0.8,   # YEAR Adjusted position (left to right, top to bottom)
         metrics_text,
-        fontsize=18,
+        fontsize=20,
         bbox=dict(facecolor='white', alpha=1.0)
     )
     

@@ -15,8 +15,8 @@ from scipy.signal import find_peaks
 # For a given dataname (i.e., "4_5_BL_12hr_FL_1dyWSSVQ_WL", "4_17_1dy_FL_1dyWSSVQ_WL")
 # For all three trained models
 # Specify variables (USER - hi)
-dataname = "8_29_15hr_FL_1hr_BLWSSVQ_WL"
-shift = 64   # shift = n_past + n_future
+dataname = "9_2_12hr_FL_12hr_BLWLV_WL"
+shift = 96   # shift = n_past + n_future
 model_types = ["GRU", "Basic_LSTM", "Stacked_LSTM"]
 base_path = rf"C:\Users\Mikey\Documents\Github\Hysteresis-ML-Modeling\model_results\{dataname}"
 data = "C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\data\\Henry_4vars_2017_2023.csv"# args.data

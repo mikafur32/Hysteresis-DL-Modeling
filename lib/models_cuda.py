@@ -50,7 +50,7 @@ def plot_model(model_name, valid_loss, data):
 
 
 # Function to train ML models and save the trained history
-def train_models(model_name, trainX, trainY, epochs=10, batch_size=16, loss="mse", load_models=False, data_name=None):
+def train_models(model_name, trainX, trainY, epochs=1, batch_size=16, loss="mse", load_models=False, data_name=None):
     if(load_models):
         return load_model(f'saved_model_multi/{data_name}/{model_name}_Saved_{data_name}')
 

@@ -19,7 +19,7 @@ n_past = 48 #args.n_past  # Back Looking (BL) steps of 15-minute increments (for
 n_future = 48 #args.n_future  # Forward Looking (FL) steps of 15-minute increments (for this data)
 test_range = [pd.Timestamp("1/1/2022 0:00"), pd.Timestamp("12/31/2022 23:45")]
 event_range = [pd.Timestamp('2/10/2022 0:00'), pd.Timestamp('3/17/2022 23:45')]
-dataname = "9_2_12hr_FL_12hr_BL"#args.dn
+dataname = "9_23_12hr_FL_12hr_BL"#args.dn
 
 
 # From outdated version, use if you want to combine new postprocess.py with model_noCLI.py
@@ -76,7 +76,7 @@ WLV_Q = {"target": "Q", "features": { "WL": "WL", "V": "V"}, "Name": "WLV_Q"}
 
 # Define tests to run!!
 #tests= [V_WL, WSS_WL, WSSV_WL, WSSVQ_WL, VQ_WL, Q_WL]  #WSSVQ_WL, WSS_V, WSSV_Q, WL_WL]
-tests= [WLV_WL, WLV_Q]
+tests= [WSSVQ_WL]
 
 
 for test in tests:

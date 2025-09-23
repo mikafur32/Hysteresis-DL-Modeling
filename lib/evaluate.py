@@ -38,7 +38,7 @@ if gpus:
   # Saves trained models, predictions, and validation loss to files
 def evaluate(csv, saveto, columns, target, data_name, event_start, event_end, 
              n_past, n_future, plotstep,
-             epochs= 10, train_range=None, test_range=None, 
+             epochs= 1, train_range=None, test_range=None, 
              train_flag= True, scaler= True):
 
     # Split data into train/test periods (later can simplify if you want)

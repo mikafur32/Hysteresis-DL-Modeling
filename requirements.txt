@@ -4,6 +4,7 @@ pandas
 scikit-learn
 matplotlib
 keras
-tensorflow
+tensorflow==2.10*
 seaborn
 keras-self-attention
+cudnn==version*

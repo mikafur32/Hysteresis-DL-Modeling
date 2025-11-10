@@ -14,41 +14,43 @@ from model_defs.BidirectionalLSTMModel import BidirectionalLSTMModel
 from model_defs.GRUModel import GRUModel
 from tensorflow.keras.models import load_model
 
-'''
-TODO: 
-1. Feature importances for each
-'''
 
+# Function to calculate NSE normalized squared error
 def nseloss(y_true, y_pred):
+  # Calculate the Normalized Squared Error (NSE) between predicted and true values
   return K.sum((y_pred-y_true)**2)/K.sum((y_true-K.mean(y_true))**2)
 
-
+# Load training history from pickle file
 def plot_model(model_name, valid_loss, data):
 
     # Load History
     with open(f'saved_model_multi/{data}/trainHistoryDict/{model_name}.pkl', "rb+") as file_pi:
         history = pickle.load(file_pi)
 
+    # Create a plot for training and validation loss curves
     plt.figure()
     plt.title(f"{model_name} Training and Validation Loss")
     plt.plot(history['loss'], label='Training loss')
     plt.plot(history['val_loss'], label='Embedded validation loss')
     plt.legend()
 
+    # Display validation loss in the plot
     description = f"Validation set loss: {valid_loss}."
     plt.text(0.5, -0.1, description, transform=plt.gca().transAxes,
             fontsize=10, color='gray', ha='center', va='center')
     
+    # Create directory to save the plot if it doesn't exist
     if not os.path.exists(f"lib/model_results/{data}/{model_name}"):
         os.makedirs(fr"lib/model_results/{data}/{model_name}") #If the saved model directory doesn't exist, make it    
 
+    # Save the plot as a PNG file
     plt.savefig(fr"lib/model_results/{data}/{model_name}/{model_name}_training_validation.png")  
     plt.close() 
 
 
 
-
-def train_models(model_name, trainX, trainY, epochs=10, batch_size=16, loss="mse", load_models=False, data_name=None):
+# Function to train ML models and save the trained history
+def train_models(model_name, trainX, trainY, epochs=1, batch_size=16, loss="mse", load_models=False, data_name=None):
     if(load_models):
         return load_model(f'saved_model_multi/{data_name}/{model_name}_Saved_{data_name}')
 
@@ -64,17 +66,13 @@ def train_models(model_name, trainX, trainY, epochs=10, batch_size=16, loss="mse
         model = BasicLSTMModel(input_shape=(trainX.shape[1], trainX.shape[2]), output_units=output_units, loss=loss, data_name=data_name + "BasicLSTM")
     elif(model_name == 'Stacked_LSTM'):
         model = StackedLSTMModel(input_shape=(trainX.shape[1], trainX.shape[2]), output_units=output_units, loss=loss, data_name=data_name + "StackedLSTM")
-    
     elif(model_name == 'Bidirectional_LSTM'):
         model = BidirectionalLSTMModel(input_shape=(trainX.shape[1], trainX.shape[2]), output_units=output_units, loss=loss, data_name=data_name + "BiDirectionalLSTM")
-    
     elif(model_name == 'GRU'):
         model = GRUModel(input_shape=(trainX.shape[1], trainX.shape[2]), output_units=output_units, loss=loss, data_name=data_name + "GRU")
 
-
     # Save model and history
     model_directory = f"saved_model_multi/{data_name}"
-    
 
     # Build and compile the model
     if model is not None:
@@ -95,16 +93,21 @@ def train_models(model_name, trainX, trainY, epochs=10, batch_size=16, loss="mse
     return model.model
 
 
-
+# Function to evaluate the model's validation loss
 def evaluate_model(model, validX, validY):
+    # Evaluate the model's performance on the validation set
     print("evaluating model")
     validation_loss = model.evaluate(validX, validY, verbose=1)
     print(f'Validation loss: {validation_loss}')
     return validation_loss
 
+
+# Function to load a pre-trained model from a specified path
 def get_model(model_name, data= 'Henry_2017_2020'):
     from keras.models import load_model
-    path = f'C:/Users/Mikey/Documents/Github/Hysterisis-ML-Modeling/saved_model_multi/{data}/{model_name}_Saved_{data}'
+
+### TODO: FIX PATH - verify correct path structure
+    path = f'saved_model_multi/{data}/{model_name}_Saved_{data}'
     if not os.path.exists(path):
         print(f"FILE NOT FOUND \n Given path: {path}")
         raise FileNotFoundError("Path to model does not exist. Check the dataname argument.")

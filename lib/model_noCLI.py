@@ -1,31 +1,29 @@
+# Import required packages and scripts
 import os, sys, argparse, re
-import evaluate, ingest
-
+import evaluate
+import pandas as pd
 from keras import mixed_precision
 #policy = mixed_precision.Policy('mixed_float16')
 
 
 # =============================================================================
-# Configure the run with command-line arguments
+# Configure the run with arguments
 # =============================================================================
 
-# assign and test the arguments
-data = "C:\\Users\\Mikey\\Documents\\Github\\Hysterisis-ML-Modeling\\data\\Henry_4vars_2017_2023.csv"# args.data
-saveto = "C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\model_results"#args.saveto
-model_names = "all" #args.model
-train = "y" #args.train
+# Assign the arguments
+data = "C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\data\\Henry_4vars_2017_2023.csv" # args.data
+saveto = "C:\\Users\\Mikey\\Documents\\Github\\Hysteresis-ML-Modeling\\model_results" # args.saveto
+model_names = "Basic_LSTM" # args.model # "Basic_LSTM" or "all"
 train_range = "['1/1/2017 0:00','12/31/2021 23:45']" #args.train_range
-n_past = 4 #args.n_past
-n_future = 24#args.n_future
-test_range = "['1/1/2022 0:00','12/31/2022 23:45']"#args.test_range
-event_range = ['3/18/2022 0:00','4/7/2022 23:45']#args.event_range
-#plotstep = "HR" 
-dataname = "TEST829BL_1hr_FL_12hr"#args.dn
+n_past = 48 #args.n_past  # Back Looking (BL) steps of 15-minute increments (for this data)
+n_future = 48 #args.n_future  # Forward Looking (FL) steps of 15-minute increments (for this data)
+test_range = [pd.Timestamp("1/1/2022 0:00"), pd.Timestamp("12/31/2022 23:45")]
+event_range = [pd.Timestamp('2/10/2022 0:00'), pd.Timestamp('3/17/2022 23:45')]
+dataname = "9_23_12hr_FL_12hr_BL"#args.dn
+epochs = 10 
 
 
-
-##### Moved this from above "configure"
-# Add a print statement to show raw arguments
+# Print statement to show raw arguments
 print("Raw arguments:", sys.argv)
 
 
@@ -33,44 +31,52 @@ print("Raw arguments:", sys.argv)
 # Run Model
 # =============================================================================
 
-# Waterfall LSTM Definitions
 
-WSS_V = {"target": "V", "features": { "WSS": "WSS"}, "Name": "WSS_V"}
-WSSV_Q = {"target": "Q", "features": { "WSS": "WSS", "V": "V"}, "Name": "WSSV_Q"}
+# Model definitions
 WSSVQ_WL = {"target": "WL", "features": { "WSS": "WSS", "V": "V", "Q": "Q"}, "Name": "WSSVQ_WL"}
+WSSV_Q = {"target": "Q", "features": { "WSS": "WSS", "V": "V"}, "Name": "WSSV_Q"}
 
-
-# Other LSTM variations
-#WSS_V = {"target": "V", "features": { "WSS": "WSS"}, "Name": "WSS_V"}
+# Other LSTM variations (to play with to prove concept)
+WSS_V = {"target": "V", "features": { "WSS": "WSS"}, "Name": "WSS_V"}
 V_Q = {"target": "Q", "features": {"V": "V"}, "Name": "V_Q"}
+V_WL = {"target": "WL", "features": {"V": "V"}, "Name": "V_WL"}
 Q_WL = {"target": "WL", "features": {"Q": "Q"}, "Name": "Q_WL"}
+VQ_WL={"target": "WL", "features": {"V": "V", "Q": "Q"}, "Name": "VQ_WL"}
 WSS_WL = {"target": "WL", "features": {"WSS": "WSS"}, "Name": "WSS_WL"}
-WSS_Q = {"target": "Q", "features": {"WSS": "WSS"}, "Name": "WSS_Q"}
-
 WL_WL = {"target": "WL", "features": { "WL":"WL"}, "Name": "Persistence_WL"}
+WSSV_WL = {"target": "WL", "features": { "WSS": "WSS", "V": "V"}, "Name": "WSSV_WL"}
+WSSQ_WL = {"target": "WL", "features": { "WSS": "WSS", "Q": "Q"}, "Name": "WSSQ_WL"}
+WSS_Q = {"target": "Q", "features": { "WSS": "WSS"}, "Name": "WSS_Q"}
 
+WL_Q = {"target": "Q", "features": { "WL": "WL"}, "Name": "WL_Q"}
+WSSWL_Q = {"target":"Q", "features": { "WSS": "WSS", "WL": "WL"}, "Name": "WSSWL_Q"}
+VWL_Q = {"target": "Q", "features": { "V": "V", "WL": "WL"}, "Name": "VWL_Q"}
+VQWL_Q = {"target": "Q", "features": { "V": "V", "Q": "Q", "WL": "WL"}, "Name": "VQWL_Q"}
+WSSVWL_Q= {"target": "Q", "features": { "WSS": "WSS", "V": "V", "WL": "WL"}, "Name": "WSSVWL_Q"}
+WSSQWL_Q= {"target": "Q", "features": { "WSS": "WSS", "Q": "Q", "WL": "WL"}, "Name": "WSSQWL_Q"}
+VQWL_WL = {"target": "WL", "features": { "V": "V", "Q": "Q", "WL": "WL"}, "Name": "VQWL_WL"}
+WSSVQ_Q= {"target": "Q", "features": { "WSS": "WSS", "Q": "Q", "V": "V"}, "Name": "WSSVQ_Q"}
 
-WL_WL = {"target": "WL", "features": { "WL":"WL"}, "Name": "Persistence_WL"}
+WSSVQWL_WL= {"target": "WL", "features": { "WSS": "WSS", "V": "V", "Q": "Q", "WL": "WL"}, "Name": "WSSVQWL_WL"}
+WSSVQWL_Q= {"target": "Q", "features": { "WSS": "WSS", "V": "V", "Q": "Q", "WL": "WL"}, "Name": "WSSVQWL_Q"}
 
+WLV_WL = {"target": "WL", "features": { "WL": "WL", "V": "V"}, "Name": "WLV_WL"}
+WLV_Q = {"target": "Q", "features": { "WL": "WL", "V": "V"}, "Name": "WLV_Q"}
 
-
-# Define tests
-tests= [WSSVQ_WL]  #WSS_V, WSSV_Q, ]
-tests2= [WSS_V, V_Q, Q_WL]
-tests3 =[WSS_WL, WSS_Q]
-
+# Define tests to run!!
+#tests= [V_WL, WSS_WL, WSSV_WL, WSSVQ_WL, VQ_WL, Q_WL]  #WSSVQ_WL, WSS_V, WSSV_Q, WL_WL]
+tests= [WSSVQ_WL]
 
 
 for test in tests:
         
     data_name = dataname + f"{test['Name']}"
     print(f"\n=============Running {data_name} =============\n")
+    
     event_start, event_end = event_range[0], event_range[1]
-
+   
     evaluate.evaluate(data, saveto, test["features"], test["target"],
                     data_name, train_range=train_range, test_range=test_range,
-                    event_start=event_start, event_end=event_end,n_past=n_past,# epochs=epochs,
-                    n_future=n_future, train_flag= train_range, #predict_flag= True, 
+                    event_start=event_start, event_end=event_end,n_past=n_past, epochs=epochs,
+                    n_future=n_future, train_flag=train_range, #predict_flag= True, 
                     plotstep=None)
-              
-      

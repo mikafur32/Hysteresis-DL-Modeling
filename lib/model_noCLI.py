@@ -20,18 +20,7 @@ n_future = 48 #args.n_future  # Forward Looking (FL) steps of 15-minute incremen
 test_range = [pd.Timestamp("1/1/2022 0:00"), pd.Timestamp("12/31/2022 23:45")]
 event_range = [pd.Timestamp('2/10/2022 0:00'), pd.Timestamp('3/17/2022 23:45')]
 dataname = "9_23_12hr_FL_12hr_BL"#args.dn
-
-
-# From outdated version, use if you want to combine new postprocess.py with model_noCLI.py
-#train = "n" #args.train
-#test_range = "['1/1/2022 0:00','12/31/2022 23:45']"#args.test_range
-#event_ranges = [
-#    (pd.Timestamp('2/10/2022 0:00'), pd.Timestamp('3/17/2022 23:45')),  # First flood event
-#    (pd.Timestamp('5/1/2022 0:00'), pd.Timestamp('5/26/2022 23:45')),   # Third flood event
-#    (pd.Timestamp('7/20/2022 0:00'), pd.Timestamp('8/7/2022 23:45'))    # Low flow event
-#]  # Version with timestamps (modifying code to work with this for robustness)
-# If you want to support single events too, allow event_range as an alias for a single entry
-#event_range = event_ranges[0]  # Default to the first event, maintaining compatibility
+epochs = 10 
 
 
 # Print statement to show raw arguments
@@ -85,11 +74,9 @@ for test in tests:
     print(f"\n=============Running {data_name} =============\n")
     
     event_start, event_end = event_range[0], event_range[1]
-    #for event_start, event_end in event_ranges:  # Loop through all event ranges # For multi-event
-        #print(f"Processing event from {event_start} to {event_end}") # For multi-event
    
     evaluate.evaluate(data, saveto, test["features"], test["target"],
                     data_name, train_range=train_range, test_range=test_range,
-                    event_start=event_start, event_end=event_end,n_past=n_past,# epochs=epochs,
+                    event_start=event_start, event_end=event_end,n_past=n_past, epochs=epochs,
                     n_future=n_future, train_flag=train_range, #predict_flag= True, 
                     plotstep=None)

@@ -66,17 +66,13 @@ def train_models(model_name, trainX, trainY, epochs=1, batch_size=16, loss="mse"
         model = BasicLSTMModel(input_shape=(trainX.shape[1], trainX.shape[2]), output_units=output_units, loss=loss, data_name=data_name + "BasicLSTM")
     elif(model_name == 'Stacked_LSTM'):
         model = StackedLSTMModel(input_shape=(trainX.shape[1], trainX.shape[2]), output_units=output_units, loss=loss, data_name=data_name + "StackedLSTM")
-    
     elif(model_name == 'Bidirectional_LSTM'):
         model = BidirectionalLSTMModel(input_shape=(trainX.shape[1], trainX.shape[2]), output_units=output_units, loss=loss, data_name=data_name + "BiDirectionalLSTM")
-    
     elif(model_name == 'GRU'):
         model = GRUModel(input_shape=(trainX.shape[1], trainX.shape[2]), output_units=output_units, loss=loss, data_name=data_name + "GRU")
 
-
     # Save model and history
     model_directory = f"saved_model_multi/{data_name}"
-    
 
     # Build and compile the model
     if model is not None:
@@ -109,7 +105,9 @@ def evaluate_model(model, validX, validY):
 # Function to load a pre-trained model from a specified path
 def get_model(model_name, data= 'Henry_2017_2020'):
     from keras.models import load_model
-    path = f'C:/Users/Mikey/Documents/Github/Hysterisis-ML-Modeling/saved_model_multi/{data}/{model_name}_Saved_{data}'
+
+### TODO: FIX PATH - verify correct path structure
+    path = f'saved_model_multi/{data}/{model_name}_Saved_{data}'
     if not os.path.exists(path):
         print(f"FILE NOT FOUND \n Given path: {path}")
         raise FileNotFoundError("Path to model does not exist. Check the dataname argument.")

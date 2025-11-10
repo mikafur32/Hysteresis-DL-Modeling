@@ -37,7 +37,6 @@ def load_observed_data():
     df_obs["WL_obs"] = df_obs["WL_obs"] * 0.3048
     return df_obs
 
-#scaler_path = rf"C:\Users\Mikey\Documents\Github\Hysteresis-ML-Modeling\model_results\{dataname}\scaler.save"
 
 #load scaler for targetted variable - change between runs as needed
 scaler_WL = joblib.load("scaler_WL.save")
@@ -49,20 +48,12 @@ def unscale_predictions(df, scaler):
     df["WL_pred"] = df["WL_pred"] * 0.3048
     return df
 
-# OR?
-# Unscale your predictions (assumes 2D)
-#preds_unscaled = scaler_WL.inverse_transform(df)
-
-# Smooth the predictions!!!
 # 5-point Moving Average 
 def smooth_predictions(df, window=50):
     df["WL_pred_smooth"] = df["WL_pred"].rolling(window=window, center=True, min_periods=1).mean()
     return df
 
 
-# Merge with observations
-#def merge_with_observations(pred_df, obs_df):
-#    return pd.merge(pred_df, obs_df, on="datetime", how="inner")
 # With SHIFTING:
 def merge_with_observations(pred_df, obs_df, shift=shift):
     # Sort both DataFrames just in case

@@ -1,8 +1,0 @@
-*.pb
-*.txt
-__pycache__/
-*.csv
-*.v2
-*.pyc
-*.idea
-*.pkl

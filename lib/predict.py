@@ -19,28 +19,16 @@ def predict(model_name, testX, saveto, dataname):
 
 # Function to plot predicted vs. observed values for the ML models
 def plot_predicts(saveto, model_name, predicts, testY, test_dates, dataname, scaler=True, event_ranges=None, event_plotstep="Day"):
-    
-    # Handle event_range if needed (just added 3/21) - maybe doesn't help for multi event
-    #if event_ranges is not None:
-    #    tstart, tend = event_ranges[0] # New - extracts the first tuple
-    #    print(f"Plotting event from {tstart} to {tend}")
-    
     testY = testY.flatten()
     predicts = predicts.to_numpy().flatten()
 
     predicts = pd.concat([pd.Series(predicts), pd.Series(predicts), pd.Series(predicts), pd.Series(predicts)], axis=1)
     testY = pd.concat([pd.Series(testY), pd.Series(testY), pd.Series(testY), pd.Series(testY)], axis=1)
 
-    #if scaler:
-    #    predicts = scaler.inverse_transform(predicts)
-    #    testY = scaler.inverse_transform(testY)
-    # If we're testing what no inverse scaling is like, need to scale the obs dataset to get metrics
-
     # Get the smallest shape
     shape = min(test_dates.shape[0], predicts.shape[0])
 
     testY.index = pd.to_datetime(test_dates[:shape])
-    #testY = pd.DataFrame(testY, index= pd.to_datetime(test_dates[:shape]))
 
     # Ensure uniform types
     predicts = predicts.astype(np.float64)
@@ -74,17 +62,7 @@ def plot_predicts(saveto, model_name, predicts, testY, test_dates, dataname, sca
                 start, end = event_range  # Unpack tuple
             else:
                 raise TypeError(f"Unexpected format for event_range: {event_range} (Type: {type(event_range)})")
-            
-            # Redundant check since we'll make sure it's within test range.. and it's causing issues
-            #if not ((event_range[0] in test_dates) or (event_range[1] in test_dates)):
-            #    raise ValueError(f"Event {event_range} not in test set daterange. Please choose another range.")
-            #if not (test_dates.min() <= event_range[0] <= test_dates.max() and 
-                 #   test_dates.min() <= event_range[1] <= test_dates.max()):
-                #raise ValueError(f"Event {event_range} is outside test set range ({test_dates.min()} to {test_dates.max()}).")
-
-            # Extract event data
-            #t_start = str(event_range[0])  # does not get time, only date
-            #t_end = str(event_range[1])    # does not get time, only date
+    
             # Extract event data and include time (00:00:00 for start, 23:45:00 for end)
             t_start = pd.to_datetime(event_range[0]).replace(hour=0, minute=0, second=0, microsecond=0)  # Set time to 00:00:00
             t_end = pd.to_datetime(event_range[1]).replace(hour=23, minute=45, second=0, microsecond=0)  # Set time to 23:45:00
@@ -101,8 +79,6 @@ def plot_predicts(saveto, model_name, predicts, testY, test_dates, dataname, sca
             print(f"testY index (first 10): {testY.index[:10]}")
             print(f"predicts index (first 10): {predicts.index[:10]}")
 
-            #eventY = testY.loc[t_start:t_end]
-            #eventPredicts = predicts.loc[t_start:t_end]
             # Try to slice using the event range
             try:
                 eventY = testY.loc[t_start:t_end]
@@ -145,7 +121,6 @@ def plot_predicts(saveto, model_name, predicts, testY, test_dates, dataname, sca
 
             # Save the file with a safe filename
             plt.savefig(f"{saveto}/{dataname}/{model_name}/predict_results/{model_name}_event_{start_str}_{end_str}_predictions.png")
-            #plt.savefig(f"{saveto}/{dataname}/{model_name}/predict_results/{model_name}_event_{event_range[0]}_{event_range[1]}_predictions.png")  
             plt.close()
 
     # ----------------------
@@ -193,8 +168,6 @@ def evaluate_metrics(predicts, y, dataname, model_name):
     # Calculate Kling-Gupta Efficiency (KGE)
     kge = evaluator.kling_gupta_efficiency(multi_output="raw_values")
         
-    #print(predicts, y)
-
     # Calculate Mean Squared Error (MSE), Root Mean Squared Error (RMSE), and Bias
     mse = np.mean((predicts - y) ** 2)
     rmse = np.sqrt(mse)
@@ -210,8 +183,6 @@ def evaluate_metrics(predicts, y, dataname, model_name):
     # Match peaks based on nearest neighbors
     tree = KDTree(true_peaks.reshape(-1, 1))
     distances, indices = tree.query(predicted_peaks.reshape(-1, 1))
-
-    #print(true_peaks, predicted_peaks)
 
     # If there are any peaks, calculate the mean peak error and peak timing error
     if len(true_peaks) > 0 and len(predicted_peaks) > 0:
